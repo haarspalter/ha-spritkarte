@@ -3,14 +3,20 @@ const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const FUEL_LABEL = { e5: "Super E5", e10: "Super E10", diesel: "Diesel" };
 
+// Eigene Leaflet-Kopie laden und per noConflict() vom globalen window.L lösen.
+// Andere Karten (z. B. weather-radar-card) bringen ihr eigenes Leaflet mit; würden
+// wir window.L mitbenutzen, könnten Klassen verschiedener Leaflet-Instanzen
+// vermischt werden (-> "Cannot read properties of undefined (reading 'x')").
 let leafletPromise;
 function loadLeaflet() {
-  if (window.L) return Promise.resolve(window.L);
   if (!leafletPromise) {
     leafletPromise = new Promise((resolve, reject) => {
       const s = document.createElement("script");
       s.src = LEAFLET_JS;
-      s.onload = () => resolve(window.L);
+      s.onload = () => {
+        const ours = window.L;
+        resolve(ours && ours.noConflict ? ours.noConflict() : ours);
+      };
       s.onerror = reject;
       document.head.appendChild(s);
     });
@@ -43,6 +49,7 @@ class SpritkarteCard extends HTMLElement {
           th,td { padding:6px 8px; text-align:right; }
           th:first-child,td:first-child { text-align:left; }
           tr.rec { font-weight:bold; background:rgba(76,175,80,.15); }
+          tr.sel { font-weight:bold; background:rgba(251,140,0,.18); }
           tr { cursor:pointer; }
           .wrap { overflow-x:auto; padding:8px 8px 0; }
         </style>
@@ -127,16 +134,20 @@ class SpritkarteCard extends HTMLElement {
       el.addEventListener("click", () => { this._amount = el.dataset.a; this._render(); }));
 
     const stations = [...veh.stations].sort((x, y) => x.costs[a].total - y.costs[a].total);
+    // Auswahl nur behalten, solange die Tankstelle zum Fahrzeug gehört
+    if (this._sel && !stations.some((s) => s.entity_id === this._sel)) this._sel = null;
+    const rowClass = (s) =>
+      s.entity_id === rec.entity_id ? "rec" : s.entity_id === this._sel ? "sel" : "";
     root.querySelector("table").innerHTML =
       `<tr><th>Tankstelle</th><th>Preis</th><th>Strecke</th><th>Zeit</th><th>Gesamt</th></tr>` +
       stations.map((s) => `
-        <tr data-id="${s.entity_id}" class="${s.entity_id === rec.entity_id ? "rec" : ""}">
+        <tr data-id="${s.entity_id}" class="${rowClass(s)}">
           <td>${s.name}</td><td>${price(s.price)}</td>
           <td>${s.distance_km.toFixed(1)} km</td>
           <td>${Math.round(s.duration_min)} min</td>
           <td>${eur(s.costs[a].total)}</td></tr>`).join("");
     root.querySelectorAll("tr[data-id]").forEach((tr) =>
-      tr.addEventListener("click", () => this._focus(tr.dataset.id)));
+      tr.addEventListener("click", () => this._select(tr.dataset.id)));
 
     loadLeaflet().then((L) => this._drawMap(L, stations, rec));
   }
@@ -167,24 +178,44 @@ class SpritkarteCard extends HTMLElement {
     L.circleMarker(pts[0], { radius: 8, color: "#1976d2", fillOpacity: 0.9 })
       .bindTooltip("Start").addTo(this._layer);
 
+    const GREEN = "#2e7d32";
+    const ORANGE = "#fb8c00";
+    const routes = d.routes || {};
+    const bestSt = stations.find((s) => s.entity_id === rec.entity_id);
+    const selSt = this._sel && this._sel !== rec.entity_id
+      ? stations.find((s) => s.entity_id === this._sel) : null;
+
+    // Routen zuerst (unter den Markern): gewählte Tankstelle orange, günstigste grün
+    const drawRoute = (st, color) => {
+      const geo = st && routes[st.route_key];
+      if (geo) L.polyline(geo, { color, weight: 5, opacity: 0.85 }).addTo(this._layer);
+    };
+    drawRoute(selSt, ORANGE);
+    drawRoute(bestSt, GREEN);
+
+    // Marker: übrige zuerst, dann gewählte, dann günstigste obenauf
     this._markers = {};
-    stations.forEach((s) => {
-      const best = s.entity_id === rec.entity_id;
+    const rank = (s) => (s === bestSt ? 2 : s === selSt ? 1 : 0);
+    [...stations].sort((x, y) => rank(x) - rank(y)).forEach((s) => {
+      const isBest = s === bestSt;
+      const isSel = s === selSt;
       const m = L.circleMarker([s.lat, s.lon], {
-        radius: best ? 11 : 7,
-        color: best ? "#2e7d32" : "#c62828",
+        radius: isBest ? 11 : isSel ? 9 : 7,
+        color: isBest ? GREEN : isSel ? ORANGE : "#c62828",
         fillOpacity: 0.85,
-      }).bindTooltip(`${s.name}: ${price(s.price)}`, { permanent: best })
+      }).bindTooltip(`${s.name}: ${price(s.price)}`, { permanent: isBest || isSel })
         .bindPopup(`<b>${s.name}</b><br>${s.address || ""}<br>${price(s.price)}<br>` +
           `${s.distance_km} km, ${Math.round(s.duration_min)} min<br>` +
           `Gesamt: ${eur(s.costs[this._amount].total)}`)
+        .on("click", () => this._select(s.entity_id))
         .addTo(this._layer);
       this._markers[s.entity_id] = m;
       pts.push([s.lat, s.lon]);
     });
-    const geo = this._veh.routes && this._veh.routes[rec.entity_id];
-    if (geo) {
-      L.polyline(geo, { color: "#1976d2", weight: 5, opacity: 0.8 }).addTo(this._layer);
+    if (this._focusId) {
+      const m = this._markers[this._focusId];
+      this._focusId = null;
+      if (m) { this._map.panTo(m.getLatLng()); m.openPopup(); }
     }
     // Ansicht nur einpassen, wenn sich die Punktmenge ändert (nicht bei Tab-Wechsel,
     // damit eine vom Nutzer gewählte Ansicht erhalten bleibt).
@@ -206,9 +237,10 @@ class SpritkarteCard extends HTMLElement {
     this._fitted = true;
   }
 
-  _focus(id) {
-    const m = this._markers && this._markers[id];
-    if (m) { this._map.panTo(m.getLatLng()); m.openPopup(); }
+  _select(id) {
+    this._sel = id;
+    this._focusId = id; // nach dem Neuzeichnen Popup öffnen / zentrieren
+    this._render();
   }
 }
 

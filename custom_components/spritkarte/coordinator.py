@@ -201,7 +201,9 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return {
             "km": summary["distance"] / 1000,
             "min": summary["duration"] / 60,
-            "geometry": [[c[1], c[0]] for c in feat["geometry"]["coordinates"]],
+            "geometry": [
+                [round(c[1], 5), round(c[0], 5)] for c in feat["geometry"]["coordinates"]
+            ],
         }
 
     async def _ensure_routes(
@@ -278,11 +280,14 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not any(v["stations"] for v in vehicles_out):
             raise UpdateFailed("Keine Route/Tankstelle für die Fahrzeuge verfügbar")
 
+        # Geometrie aller genutzten Routen einmalig (von Fahrzeugen geteilt) ausliefern
+        used = {s["route_key"] for v in vehicles_out for s in v["stations"]}
         return {
             "origin": {"lat": origin[0], "lon": origin[1]},
             "amounts": amounts,
             "round_trip": factor == 2,
             "vehicles": vehicles_out,
+            "routes": {k: routes_info[k]["geometry"] for k in used if k in routes_info},
         }
 
     def _calc_vehicle(
@@ -317,7 +322,7 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "trip_km": round(trip_km, 2),
                     "fuel_burned_l": round(burned, 2),
                     "costs": costs,
-                    "_geometry": info["geometry"],
+                    "route_key": self._skey(s),
                 }
             )
 
@@ -328,7 +333,6 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "consumption": cons,
             "stations": [],
             "recommendations": {},
-            "routes": {},
         }
         if not enriched:
             return result
@@ -348,12 +352,6 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
             best["recommended_for"] = best.get("recommended_for", []) + [amt]
 
-        # Routengeometrie nur für empfohlene Stationen ausliefern (kleine Attribute)
-        result["routes"] = {
-            e["entity_id"]: e["_geometry"] for e in enriched if e.get("recommended_for")
-        }
-        for e in enriched:
-            e.pop("_geometry", None)
         enriched.sort(key=lambda e: e["costs"][f"{amounts[0]:g}"]["total"])
         result["stations"] = enriched
         return result

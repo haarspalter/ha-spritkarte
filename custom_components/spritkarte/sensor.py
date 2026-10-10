@@ -29,7 +29,7 @@ class TankempfehlungSensor(CoordinatorEntity, SensorEntity):
     _attr_name = "Tankempfehlung"
     _attr_icon = "mdi:gas-station"
     # Große Attribute nicht in die Datenbank schreiben
-    _unrecorded_attributes = frozenset({"vehicles", "origin", "amounts", "round_trip"})
+    _unrecorded_attributes = frozenset({"vehicles", "routes", "origin", "amounts", "round_trip"})
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
