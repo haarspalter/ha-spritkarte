@@ -1,0 +1,4 @@
+recalculate:
+  name: Routen neu berechnen
+  description: Verwirft alle zwischengespeicherten Routen und berechnet sie neu.
+

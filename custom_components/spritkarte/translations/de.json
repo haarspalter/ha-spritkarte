@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Spritkarte einrichten",
+        "description": "Preis-Sensoren stammen z. B. aus der Tankerkönig-Integration (E5/E10/Diesel gemischt möglich). Weitere Fahrzeuge fügst du später unter „Konfigurieren“ hinzu.",
+        "data": {
+          "ors_api_key": "OpenRouteService API-Key",
+          "price_entities": "Preis-Sensoren der Tankstellen",
+          "origin_entity": "Startpunkt (Standard: Home-Zone)",
+          "amounts": "Tankmengen in Litern (kommagetrennt)",
+          "round_trip": "Rückfahrt einrechnen",
+          "scan_interval": "Aktualisierungsintervall",
+          "vehicle_name": "Name des ersten Fahrzeugs",
+          "fuel": "Kraftstoffsorte",
+          "consumption": "Verbrauch"
+        }
+      }
+    },
+    "error": {
+      "invalid_amounts": "Bitte gültige Liter-Werte angeben, z. B. 20, 40",
+      "invalid_name": "Bitte einen Namen angeben"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Spritkarte konfigurieren",
+        "menu_options": {
+          "settings": "Allgemeine Einstellungen",
+          "add_vehicle": "Fahrzeug hinzufügen",
+          "edit_vehicle": "Fahrzeug bearbeiten / löschen"
+        }
+      },
+      "settings": {
+        "title": "Allgemeine Einstellungen",
+        "data": {
+          "price_entities": "Preis-Sensoren der Tankstellen",
+          "origin_entity": "Startpunkt (Standard: Home-Zone)",
+          "amounts": "Tankmengen in Litern (kommagetrennt)",
+          "round_trip": "Rückfahrt einrechnen",
+          "scan_interval": "Aktualisierungsintervall"
+        }
+      },
+      "add_vehicle": {
+        "title": "Fahrzeug hinzufügen",
+        "data": {
+          "vehicle_name": "Name",
+          "fuel": "Kraftstoffsorte",
+          "consumption": "Verbrauch"
+        }
+      },
+      "edit_vehicle": {
+        "title": "Fahrzeug auswählen",
+        "data": { "vehicle": "Fahrzeug" }
+      },
+      "edit_vehicle_form": {
+        "title": "Fahrzeug bearbeiten",
+        "data": {
+          "vehicle_name": "Name",
+          "fuel": "Kraftstoffsorte",
+          "consumption": "Verbrauch",
+          "delete": "Dieses Fahrzeug löschen"
+        }
+      }
+    },
+    "error": {
+      "invalid_amounts": "Bitte gültige Liter-Werte angeben, z. B. 20, 40",
+      "invalid_name": "Bitte einen Namen angeben",
+      "last_vehicle": "Das letzte Fahrzeug kann nicht gelöscht werden"
+    }
+  }
+}

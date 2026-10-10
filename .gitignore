@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+
+# Node (falls Tooling für die Karte hinzukommt)
+node_modules/
+
+# Home Assistant Testumgebung / Secrets (z. B. ORS-API-Key)
+config/
+secrets.yaml
+.storage/
+*.log
+.env
+
+# Editoren / IDEs
+.vscode/
+.idea/
+*.swp
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+desktop.ini
+
