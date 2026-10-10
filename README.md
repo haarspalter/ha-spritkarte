@@ -38,6 +38,9 @@ tile_url: https://tile.openstreetmap.org/{z}/{x}/{y}.png   # optional
 
 Die JS-Datei wird von der Integration automatisch geladen (kein Ressourceneintrag nötig). Leaflet wird per CDN (unpkg) geladen.
 
+## Änderungen
+Für eine vollständige Liste aller Änderungen siehe [CHANGELOG](./CHANGELOG.md).
+
 ## Hinweise
 - Kartenkacheln: `tile.openstreetmap.org` – nur für geringe Last erlaubt (OSM Tile Usage Policy).
 
