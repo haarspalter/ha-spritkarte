@@ -11,7 +11,8 @@ Empfiehlt die günstigste Tankstelle unter Berücksichtigung von **Preis**, **Fa
 - **Manuell neu berechnen:** Button `button.spritkarte_routen_neu_berechnen` oder Service `spritkarte.recalculate`.
 - **Mehrere Fahrzeuge:** Jedes Fahrzeug hat Name, Kraftstoffsorte (E5/E10/Diesel) und Verbrauch. Verwaltung unter *Einstellungen → Geräte & Dienste → Spritkarte → Konfigurieren* (Fahrzeug hinzufügen / bearbeiten / löschen). Du kannst Preis-Sensoren aller Sorten gemischt auswählen; jedes Fahrzeug nutzt nur die Tankstellen-Sensoren seiner Sorte (erkannt über das Attribut `fuel_type` bzw. die Entity-ID). Routen werden einmal je Standort berechnet und von allen Fahrzeugen geteilt.
 - Sensoren: `sensor.spritkarte_tankempfehlung` (alle Fahrzeuge, für die Karte) und je Fahrzeug ein kompakter Sensor `sensor.spritkarte_tankempfehlung_<name>` für Automationen.
-- Die Karte zeigt bei mehreren Fahrzeugen Tabs; optional `vehicle: <Name>` setzt das Standard-Fahrzeug.
+- **Kartendarstellung & Routen:** Die Route zur günstigsten Tankstelle wird dauerhaft in **grün** angezeigt. Klickt man auf eine andere Tankstelle in der Karte oder Tabelle, wird deren Route in **orange** zusätzlich eingeblendet und der Marker fokussiert.
+- **Anzeige & Dashboard:** Die Karte unterstützt Tabs für Fahrzeuge und Tankmengen, Anzeige des letzten Aktualisierungszeitpunkts sowie flexible Layouts (Karte ausblendbar, reiner Kompaktmodus ohne Tabelle).
 - Kosten je Menge `L`: `(L + Fahrstrecke · Verbrauch/100) · Preis`. Optional wird die Rückfahrt eingerechnet.
 
 ## Installation
@@ -20,16 +21,18 @@ Empfiehlt die günstigste Tankstelle unter Berücksichtigung von **Preis**, **Fa
 3. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Spritkarte*: API-Key, Preis-Sensoren (alle Sorten gemischt möglich), Mengen (z. B. `20, 40`) sowie das erste Fahrzeug (Name, Kraftstoffsorte, Verbrauch).
 4. Karte zum Dashboard hinzufügen – am einfachsten **visuell**:
    - Dashboard im Bearbeitungsmodus öffnen → *Karte hinzufügen* → **„Spritkarte“** auswählen (mit Live-Vorschau).
-   - Im visuellen Editor Sensor, Standard-Fahrzeug, Standard-Tankmenge und Kartenhöhe einstellen.
+   - Im visuellen Editor Sensor, Standard-Fahrzeug, Standard-Tankmenge, Kartenanzeige / Kartenhöhe und Kompaktmodus einstellen.
 
-   Alternativ per YAML (optional, z. B. für `tile_url`):
+   Alternativ per YAML (alle Optionen):
 
 ```yaml
 type: custom:spritkarte-card
 entity: sensor.spritkarte_tankempfehlung
-vehicle: Golf     # optional, Standard-Fahrzeug (Name)
-amount: 40        # optional, Standard-Tankmenge
-map_height: 350   # optional
+vehicle: Golf            # optional, Standard-Fahrzeug (Name)
+amount: 40               # optional, Standard-Tankmenge
+show_map: false          # optional (Standard: true), blendet die Karte aus (nur Tabelle)
+map_height: 350          # optional (Standard: 350)
+only_recommended: true   # optional (Standard: false), Kompaktmodus: blendet Tabelle aus, zeigt nur Empfehlung
 tile_url: https://tile.openstreetmap.org/{z}/{x}/{y}.png   # optional
 ```
 

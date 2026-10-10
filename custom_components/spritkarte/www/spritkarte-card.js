@@ -65,7 +65,12 @@ class SpritkarteCard extends HTMLElement {
     }
   }
 
-  getCardSize() { return 8; }
+  getCardSize() {
+    let size = 2; // Header + Tabs + Updated
+    if (this._config && this._config.show_map !== false) size += 4;
+    if (this._config && !this._config.only_recommended) size += 3;
+    return size;
+  }
 
   static getConfigElement() {
     return document.createElement("spritkarte-card-editor");
@@ -163,23 +168,38 @@ class SpritkarteCard extends HTMLElement {
     tabs.querySelectorAll(".tab").forEach((el) =>
       el.addEventListener("click", () => { this._amount = el.dataset.a; this._render(); }));
 
-    const stations = [...veh.stations].sort((x, y) => x.costs[a].total - y.costs[a].total);
-    // Auswahl nur behalten, solange die Tankstelle zum Fahrzeug gehört
-    if (this._sel && !stations.some((s) => s.entity_id === this._sel)) this._sel = null;
-    const rowClass = (s) =>
-      s.entity_id === rec.entity_id ? "rec" : s.entity_id === this._sel ? "sel" : "";
-    root.querySelector("table").innerHTML =
-      `<tr><th>Tankstelle</th><th>Preis</th><th>Strecke</th><th>Zeit</th><th>Gesamt</th></tr>` +
-      stations.map((s) => `
-        <tr data-id="${s.entity_id}" class="${rowClass(s)}">
-          <td>${s.name}</td><td>${price(s.price)}</td>
-          <td>${s.distance_km.toFixed(1)} km</td>
-          <td>${Math.round(s.duration_min)} min</td>
-          <td>${eur(s.costs[a].total)}</td></tr>`).join("");
-    root.querySelectorAll("tr[data-id]").forEach((tr) =>
-      tr.addEventListener("click", () => this._select(tr.dataset.id)));
+    const showMap = this._config.show_map !== false;
+    const onlyRec = Boolean(this._config.only_recommended);
 
-    loadLeaflet().then((L) => this._drawMap(L, stations, rec));
+    const mapEl = root.querySelector("#map");
+    mapEl.style.display = showMap ? "block" : "none";
+
+    const wrapEl = root.querySelector(".wrap");
+    wrapEl.style.display = onlyRec ? "none" : "block";
+
+    const stations = [...veh.stations].sort((x, y) => x.costs[a].total - y.costs[a].total);
+    if (!onlyRec) {
+      // Auswahl nur behalten, solange die Tankstelle zum Fahrzeug gehört
+      if (this._sel && !stations.some((s) => s.entity_id === this._sel)) this._sel = null;
+      const rowClass = (s) =>
+        s.entity_id === rec.entity_id ? "rec" : s.entity_id === this._sel ? "sel" : "";
+      root.querySelector("table").innerHTML =
+        `<tr><th>Tankstelle</th><th>Preis</th><th>Strecke</th><th>Zeit</th><th>Gesamt</th></tr>` +
+        stations.map((s) => `
+          <tr data-id="${s.entity_id}" class="${rowClass(s)}">
+            <td>${s.name}</td><td>${price(s.price)}</td>
+            <td>${s.distance_km.toFixed(1)} km</td>
+            <td>${Math.round(s.duration_min)} min</td>
+            <td>${eur(s.costs[a].total)}</td></tr>`).join("");
+      root.querySelectorAll("tr[data-id]").forEach((tr) =>
+        tr.addEventListener("click", () => this._select(tr.dataset.id)));
+    } else {
+      root.querySelector("table").innerHTML = "";
+    }
+
+    if (showMap) {
+      loadLeaflet().then((L) => this._drawMap(L, stations, rec));
+    }
   }
 
   _drawMap(L, stations, rec) {
@@ -293,7 +313,9 @@ class SpritkarteCardEditor extends HTMLElement {
         entity: "Tankempfehlungs-Sensor",
         vehicle: "Standard-Fahrzeug (Name, optional)",
         amount: "Standard-Tankmenge (optional)",
+        show_map: "Karte anzeigen",
         map_height: "Kartenhöhe",
+        only_recommended: "Kompaktmodus: Nur günstigste Tankstelle (keine Tabelle)",
       }[s.name] || s.name);
       this._form.schema = [
         { name: "entity", required: true,
@@ -302,9 +324,11 @@ class SpritkarteCardEditor extends HTMLElement {
         { name: "amount",
           selector: { number: { min: 1, max: 200, step: 1, mode: "box",
                                 unit_of_measurement: "l" } } },
+        { name: "show_map", selector: { boolean: {} } },
         { name: "map_height",
           selector: { number: { min: 150, max: 1000, step: 10, mode: "slider",
                                 unit_of_measurement: "px" } } },
+        { name: "only_recommended", selector: { boolean: {} } },
       ];
       this._form.addEventListener("value-changed", (ev) => {
         const config = { ...ev.detail.value };
@@ -318,7 +342,12 @@ class SpritkarteCardEditor extends HTMLElement {
       this.appendChild(this._form);
     }
     this._form.hass = this._hass;
-    this._form.data = { map_height: 350, ...this._config };
+    this._form.data = {
+      map_height: 350,
+      show_map: this._config.show_map !== false,
+      only_recommended: Boolean(this._config.only_recommended),
+      ...this._config,
+    };
   }
 }
 
