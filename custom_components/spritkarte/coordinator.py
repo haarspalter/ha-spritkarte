@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from time import monotonic
 from typing import Any
 
@@ -283,6 +283,7 @@ class SpritkarteCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Geometrie aller genutzten Routen einmalig (von Fahrzeugen geteilt) ausliefern
         used = {s["route_key"] for v in vehicles_out for s in v["stations"]}
         return {
+            "updated_at": datetime.now(timezone.utc).isoformat(),
             "origin": {"lat": origin[0], "lon": origin[1]},
             "amounts": amounts,
             "round_trip": factor == 2,

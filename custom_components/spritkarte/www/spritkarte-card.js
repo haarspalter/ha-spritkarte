@@ -52,6 +52,7 @@ class SpritkarteCard extends HTMLElement {
           tr.sel { font-weight:bold; background:rgba(251,140,0,.18); }
           tr { cursor:pointer; }
           .wrap { overflow-x:auto; padding:8px 8px 0; }
+          .updated { padding:6px 16px 10px; font-size:.8em; text-align:right; color:var(--secondary-text-color); }
         </style>
         <ha-card>
           <div class="tabs vtabs"></div>
@@ -59,6 +60,7 @@ class SpritkarteCard extends HTMLElement {
           <div class="tabs"></div>
           <div id="map"></div>
           <div class="wrap"><table></table></div>
+          <div class="updated"></div>
         </ha-card>`;
     }
   }
@@ -86,10 +88,38 @@ class SpritkarteCard extends HTMLElement {
     this._render();
   }
 
+  connectedCallback() {
+    this._ticker = setInterval(() => this._renderUpdated(), 60000);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._ticker);
+  }
+
+  _renderUpdated() {
+    const el = this.shadowRoot && this.shadowRoot.querySelector(".updated");
+    const ts = this._data && this._data.updated_at;
+    if (!el || !ts) return;
+    const t = new Date(ts);
+    if (isNaN(t)) return;
+    const lang = (this._hass && this._hass.language) || "de";
+    const diffMins = Math.round((t.getTime() - Date.now()) / 60000);
+    const rel = new Intl.RelativeTimeFormat(lang, { numeric: "auto" }).format(
+      Math.abs(diffMins) < 60 ? diffMins : Math.round(diffMins / 60),
+      Math.abs(diffMins) < 60 ? "minute" : "hour"
+    );
+    const sameDay = t.toDateString() === new Date().toDateString();
+    const abs = sameDay
+      ? t.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })
+      : t.toLocaleString(lang, { dateStyle: "short", timeStyle: "short" });
+    el.textContent = `Zuletzt aktualisiert: ${abs} (${rel})`;
+  }
+
   _render() {
     const d = this._data;
     if (!d || !d.amounts || !d.vehicles || !d.vehicles.length) return;
     const root = this.shadowRoot;
+    this._renderUpdated();
 
     // Fahrzeug bestimmen (Konfig 'vehicle' = Name oder ID, sonst erstes)
     const vehicles = d.vehicles;
