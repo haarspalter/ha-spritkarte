@@ -15,7 +15,7 @@ Empfiehlt die günstigste Tankstelle unter Berücksichtigung von **Preis**, **Fa
 - Kosten je Menge `L`: `(L + Fahrstrecke · Verbrauch/100) · Preis`. Optional wird die Rückfahrt eingerechnet.
 
 ## Installation
-1. Ordner `custom_components/spritkarte` nach `<config>/custom_components/` kopieren (oder per HACS als Custom Repository), HA neu starten.
+1. Per **HACS**: *HACS → ⋮ → Benutzerdefinierte Repositories* → URL `https://github.com/haarspalter/ha-spritkarte`, Kategorie **Integration** (nicht „Dashboard/Plugin“ – die Karte wird von der Integration mitgeliefert) → herunterladen. Manuell: Ordner `custom_components/spritkarte` nach `<config>/custom_components/` kopieren. Danach HA neu starten.
 2. Kostenlosen API-Key bei https://openrouteservice.org holen.
 3. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Spritkarte*: API-Key, Preis-Sensoren (alle Sorten gemischt möglich), Mengen (z. B. `20, 40`) sowie das erste Fahrzeug (Name, Kraftstoffsorte, Verbrauch).
 4. Karte zum Dashboard hinzufügen – am einfachsten **visuell**:

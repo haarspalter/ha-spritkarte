@@ -1,13 +1,12 @@
 {
   "domain": "spritkarte",
   "name": "Spritkarte",
-  "codeowners": [],
+  "codeowners": ["@haarspalter"],
   "config_flow": true,
   "dependencies": ["http", "frontend"],
-  "documentation": "https://github.com/example/ha_spritkarte",
+  "documentation": "https://github.com/haarspalter/ha-spritkarte",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/example/ha_spritkarte/issues",
+  "issue_tracker": "https://github.com/haarspalter/ha-spritkarte/issues",
   "requirements": [],
   "version": "0.1.0"
 }
-
